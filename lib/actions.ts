@@ -3,9 +3,9 @@
 import { Product, SearchParams } from "@/app/types/types";
 
 export async function fetchProducts(searchParams: SearchParams) {
-  const { page = '1', search = '', category = '', sort = '' } = searchParams;
+  const { page = 1, search = '', category = '', sort = '' } = searchParams;
   const limit = 8;
-  const offset = (parseInt(page) - 1) * limit;
+  const offset = (page - 1) * limit;
 
   let products = await fetch('https://fakestoreapi.com/products')
     .then(res => res.json());

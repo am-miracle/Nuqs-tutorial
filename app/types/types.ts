@@ -12,7 +12,7 @@ export interface Product {
 }
 
 export interface SearchParams {
-  page?: string;
+  page?: number;
   search?: string;
   category?: string;
   sort?: string;
