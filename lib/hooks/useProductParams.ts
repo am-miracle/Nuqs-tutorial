@@ -1,39 +1,47 @@
-import { useQueryState, useQueryStates } from 'nuqs';
+import { useQueryState, useQueryStates, parseAsString, parseAsInteger, createParser } from 'nuqs';
+import { useTransition } from 'react';
+import { z } from 'zod';
 
+const SortSchema = z.enum(['', 'price-asc', 'price-desc', 'rating']);
+type SortOption = z.infer<typeof SortSchema>;
+
+const zodSortParser = createParser({
+  parse: (value: string | null): SortOption => {
+    const result = SortSchema.safeParse(value ?? '');
+    return result.success ? result.data : '';
+  },
+  serialize: (value: SortOption) => value,
+});
 export function useProductParams() {
-  const [search, setSearch] = useQueryState('search', {
-    defaultValue: '',
-    parse: (value) => value || '',
-    history: 'push',
-    shallow: false
-  });
+    const [isPending, startTransition] = useTransition();
+
+  const [search, setSearch] = useQueryState('search',
+      parseAsString.withDefault('').withOptions({
+          shallow: false,
+          history: 'push',
+          startTransition
+      })
+  );
 
   const [{ category, sort, page }, setParams] = useQueryStates({
-    category: {
-      defaultValue: '',
-      parse: (value) => value || '',
-    },
-    sort: {
-      defaultValue: '',
-      parse: (value) => value || '',
-    },
-    page: {
-      defaultValue: '1',
-      parse: (value) => value || '1',
-    },
+      category: parseAsString.withDefault(""),
+      sort: zodSortParser.withDefault("" as SortOption),
+      page: parseAsInteger.withDefault(1),
   }, {
-    history: 'push',
+      history: 'push',
+      shallow: false,
+      startTransition
   });
 
   const setCategory = (newCategory: string) => {
-    setParams({ category: newCategory, page: '1' });
+    setParams({ category: newCategory, page: 1 });
   };
 
-  const setSort = (newSort: string) => {
-    setParams({ sort: newSort, page: '1' });
+  const setSort = (newSort: SortOption) => {
+    setParams({ sort: newSort, page: 1 });
   };
 
-  const setPage = (newPage: string) => {
+  const setPage = (newPage: number) => {
     setParams({ page: newPage });
   };
 
@@ -44,7 +52,8 @@ export function useProductParams() {
     setCategory,
     sort,
     setSort,
-    page,
-    setPage,
+      page,
+      setPage,
+    isPending
   };
 }

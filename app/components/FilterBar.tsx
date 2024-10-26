@@ -1,12 +1,6 @@
 'use client'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
-
-export default function FilterBar() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+import { useProductParams } from '@/lib/hooks/useProductParams';
+import LoadingSpinner from './LoadingSpinner';
 
   const categories = [
     "electronics",
@@ -20,26 +14,27 @@ export default function FilterBar() {
     { value: 'price-asc', label: 'Price: Low to High' },
     { value: 'price-desc', label: 'Price: High to Low' },
     { value: 'rating', label: 'Best Rating' }
-  ];
+  ] as const;
 
-  const handleFilter = (type: string, value: string) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set(type, value);
-      } else {
-        params.delete(type);
-      }
-      params.set('page', '1'); // Reset to first page on filter change
-      router.push(`${pathname}?${params.toString()}`);
-    });
+type SortOption = typeof sortOptions[number]['value'];
+
+export default function FilterBar() {
+  const { category, setCategory, sort, setSort, isPending } = useProductParams();
+
+
+  const handleCategoryChange = (value: string) => {
+      setCategory(value);
+  };
+
+  const handleSortChange = (value: SortOption) => {
+      setSort(value);
   };
 
   return (
     <div className="flex gap-4 mb-4">
       <select
-        value={searchParams.get('category') || ''}
-        onChange={(e) => handleFilter('category', e.target.value)}
+        value={category}
+        onChange={(e) => handleCategoryChange(e.target.value)}
         className="p-2 border rounded-lg bg-blue-500"
       >
         <option value="">All Categories</option>
@@ -49,8 +44,8 @@ export default function FilterBar() {
       </select>
 
       <select
-        value={searchParams.get('sort') || ''}
-        onChange={(e) => handleFilter('sort', e.target.value)}
+        value={sort}
+        onChange={(e) => handleSortChange(e.target.value as SortOption)}
         className="p-2 border rounded-lg bg-blue-500"
       >
         {sortOptions.map(option => (
@@ -60,7 +55,7 @@ export default function FilterBar() {
         ))}
       </select>
 
-      {isPending && <div>Loading...</div>}
+      {isPending && <LoadingSpinner />}
     </div>
   );
 }

@@ -1,59 +1,48 @@
 'use client'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
+import LoadingSpinner from './LoadingSpinner';
+import { useProductParams } from '@/lib/hooks/useProductParams';
 
 interface PaginationProps {
   totalPages: number;
 }
 
 export default function Pagination({ totalPages }: PaginationProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const { page, setPage, isPending } = useProductParams();
+  const currentPage = page;
 
-  const currentPage = Number(searchParams.get('page')) || 1;
-
-  const handlePageChange = (page: number) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('page', page.toString());
-      router.push(`${pathname}?${params.toString()}`);
-    });
+  const handlePageChange = (newPage: number) => {
+      setPage(newPage);
   };
 
   return (
-    <div className="flex justify-center gap-2 mt-4">
+    <div className="flex justify-center items-center gap-2 mt-4">
       <button
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage === 1 || isPending}
-        className="px-4 py-2 border rounded-lg disabled:opacity-50"
+        className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-100"
       >
         Previous
       </button>
-
-      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
         <button
-          key={page}
-          onClick={() => handlePageChange(page)}
+          key={p}
+          onClick={() => handlePageChange(p)}
           disabled={isPending}
-          className={`px-4 py-2 border rounded-lg ${
-            currentPage === page ? 'bg-blue-500 text-white' : ''
+          className={`px-4 py-2 border rounded-lg hover:bg-gray-100 ${
+            currentPage === p ? 'bg-blue-500 text-white hover:bg-blue-600' : ''
           }`}
         >
-          {page}
+          {p}
         </button>
       ))}
-
       <button
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage === totalPages || isPending}
-        className="px-4 py-2 border rounded-lg disabled:opacity-50"
+        className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-100"
       >
         Next
       </button>
-
-      {isPending && <div>Loading...</div>}
+      {isPending && <LoadingSpinner />}
     </div>
   );
 }
